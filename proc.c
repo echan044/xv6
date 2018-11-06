@@ -367,10 +367,14 @@ waitpid(int pid, int *status, int options)
 //  - swtch to start running that process
 //  - eventually that process transfers control
 //      via swtch back to the scheduler.
+
+
+
 void
 scheduler(void)
 {
   struct proc *p;
+  struct proc *process = myproc();
   struct cpu *c = mycpu();
   c->proc = 0;
   
@@ -379,19 +383,28 @@ scheduler(void)
     sti();
 
     // Loop over process table looking for process to run.
+    
+
     acquire(&ptable.lock);
+
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
-      if(p->state != RUNNABLE)
-        continue;
+	if(p->state != RUNNABLE)
+	 continue;
+
+    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+      if(p->state == RUNNABLE)
+        if(process->priority > p->priority)
+	    p = process;
 
       // Switch to chosen process.  It is the process's job
       // to release ptable.lock and then reacquire it
       // before jumping back to us.
-      c->proc = p;
-      switchuvm(p);
-      p->state = RUNNING;
+    //  p = process;
+      c->proc = process;
+      switchuvm(process);
+      process->state = RUNNING;
 
-      swtch(&(c->scheduler), p->context);
+      swtch(&(c->scheduler), process->context);
       switchkvm();
 
       // Process is done running for now.
@@ -403,6 +416,7 @@ scheduler(void)
   }
 }
 
+}
 // Enter scheduler.  Must hold only ptable.lock
 // and have changed proc->state. Saves and restores
 // intena because intena is a property of this
@@ -427,6 +441,15 @@ sched(void)
   intena = mycpu()->intena;
   swtch(&p->context, mycpu()->scheduler);
   mycpu()->intena = intena;
+}
+
+
+int setpriority(int priority){
+   acquire(&ptable.lock);
+   struct proc *p = myproc();
+   p->priority = priority;
+   release(&ptable.lock);
+   return 0;
 }
 
 // Give up the CPU for one scheduling round.

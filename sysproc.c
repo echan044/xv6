@@ -7,6 +7,7 @@
 #include "mmu.h"
 #include "proc.h"
 
+
 int
 sys_fork(void)
 {
@@ -50,6 +51,17 @@ sys_waitpid(void)
     return 50;
 
   return waitpid(pid, (int *) status, option);
+}
+
+
+int sys_priority(void){
+   int priority;
+   if(argint(0, &priority) < 0)
+	return -1;
+
+   return setpriority(priority);
+ //  return 0;
+
 }
 
 int
