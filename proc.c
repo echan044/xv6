@@ -368,13 +368,6 @@ waitpid(int pid, int *status, int options)
 //  - eventually that process transfers control
 //      via swtch back to the scheduler.
 
-int setpriority(int priority){
-   acquire(&ptable.lock);
-   struct proc *p = myproc();
-   p->priority = priority;
-   release(&ptable.lock);
-   return 0;
-}
 
 
 void
@@ -398,8 +391,8 @@ scheduler(void)
 	if(p->state != RUNNABLE)
 	 continue;
 
-    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
-      if(p->state == RUNNABLE)
+    for(process = ptable.proc; process < &ptable.proc[NPROC]; process++){
+      if(process->state == RUNNABLE)
         if(process->priority > p->priority)
 	    p = process;
 
@@ -450,7 +443,13 @@ sched(void)
   mycpu()->intena = intena;
 }
 
-
+int setpriority(int priority){
+   acquire(&ptable.lock);
+   struct proc *p = myproc();
+   p->priority = priority;
+   release(&ptable.lock);
+   return 0;
+}
 // Give up the CPU for one scheduling round.
 void
 yield(void)

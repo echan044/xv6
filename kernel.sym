@@ -106,6 +106,7 @@
 80106261 vector122
 801057f0 sys_sbrk
 80112760 ioapicid
+80105760 sys_setpriority
 801063e7 vector156
 80106813 vector245
 80112634 ioapic
@@ -118,7 +119,7 @@
 80106072 vector67
 8010630f vector138
 801060b1 vector74
-80103b40 sched
+80103b90 sched
 801046c0 memmove
 80106018 vector57
 80104a10 syscall
@@ -141,7 +142,7 @@
 8010666f vector210
 801049d0 argstr
 80106717 vector224
-80103d40 setpriority
+80103a50 setpriority
 80105f88 vector41
 80100660 cprintf
 80100de0 filedup
@@ -286,7 +287,6 @@
 801156a8 end
 801065eb vector199
 801062bb vector131
-80105760 sys_priority
 80106867 vector252
 80100fe0 filewrite
 80105e25 vector0
@@ -308,7 +308,7 @@
 8010a48c _binary_initcode_end
 80100000 multiboot_header
 801062a3 vector129
-80103a50 scheduler
+80103aa0 scheduler
 80101ba0 dirlookup
 801065d3 vector197
 80100e30 fileclose
@@ -462,7 +462,7 @@
 801001a0 bwrite
 80106783 vector233
 801059e0 idtinit
-80103c00 exit
+80103c50 exit
 801056b0 sys_wait
 80105670 sys_exit
 80101e00 dirlink
