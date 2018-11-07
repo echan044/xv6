@@ -121,7 +121,6 @@ int             wait(int*);
 void            wakeup(void*);
 void            yield(void);
 int             waitpid(int, int*, int);
-int             setpriority(int);
 // swtch.S
 void            swtch(struct context**, struct context*);
 
@@ -156,7 +155,7 @@ int             argstr(int, char**);
 int             fetchint(uint, int*);
 int             fetchstr(uint, char**);
 void            syscall(void);
-
+int             setpriority(int);
 // timer.c
 void            timerinit(void);
 

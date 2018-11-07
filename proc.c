@@ -368,6 +368,13 @@ waitpid(int pid, int *status, int options)
 //  - eventually that process transfers control
 //      via swtch back to the scheduler.
 
+int setpriority(int priority){
+   acquire(&ptable.lock);
+   struct proc *p = myproc();
+   p->priority = priority;
+   release(&ptable.lock);
+   return 0;
+}
 
 
 void
@@ -443,14 +450,6 @@ sched(void)
   mycpu()->intena = intena;
 }
 
-
-int setpriority(int priority){
-   acquire(&ptable.lock);
-   struct proc *p = myproc();
-   p->priority = priority;
-   release(&ptable.lock);
-   return 0;
-}
 
 // Give up the CPU for one scheduling round.
 void
