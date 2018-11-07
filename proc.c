@@ -374,11 +374,13 @@ void
 scheduler(void)
 {
   struct proc *p;
-  struct proc *process = myproc();
+  struct proc *highestPriority;
   struct cpu *c = mycpu();
   c->proc = 0;
-  
+ // int highflag = 0;
+  //highestPriority->priority = 1;
   for(;;){
+	int highFlag = 0;
     // Enable interrupts on this processor.
     sti();
 
@@ -390,33 +392,34 @@ scheduler(void)
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
 	if(p->state != RUNNABLE)
 	 continue;
-
-    for(process = ptable.proc; process < &ptable.proc[NPROC]; process++){
-      if(process->state == RUNNABLE)
-        if(process->priority > p->priority)
-	    p = process;
+    if(highFlag == 0)
+	highestPriority = p;
+        highFlag = 1; 
+    if(p->priority < highestPriority->priority)
+	    highestPriority = p;
+    }
 
       // Switch to chosen process.  It is the process's job
       // to release ptable.lock and then reacquire it
       // before jumping back to us.
     //  p = process;
-      c->proc = process;
-      switchuvm(process);
-      process->state = RUNNING;
+      c->proc = highestPriority;
+      switchuvm(highestPriority);
+      highestPriority->state = RUNNING;
 
-      swtch(&(c->scheduler), process->context);
+      swtch(&(c->scheduler), highestPriority->context);
       switchkvm();
 
       // Process is done running for now.
       // It should have changed its p->state before coming back.
       c->proc = 0;
-    }
+    
     release(&ptable.lock);
 
   }
 }
 
-}
+
 // Enter scheduler.  Must hold only ptable.lock
 // and have changed proc->state. Saves and restores
 // intena because intena is a property of this
