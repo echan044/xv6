@@ -546,7 +546,6 @@ int waitPid(void){
  354:	83 ec 0c             	sub    $0xc,%esp
  357:	56                   	push   %esi
  358:	e8 ed 02 00 00       	call   64a <wait>
-			//printf("%d This is ret_pid:",ret_pid);	 
 			printf(1,"\n This is the parent: child with PID# %d has finished with status %d \n",ret_pid,exit_status);
  35d:	ff 75 f4             	pushl  -0xc(%ebp)
  360:	50                   	push   %eax
@@ -563,7 +562,6 @@ int waitPid(void){
  370:	83 eb 01             	sub    $0x1,%ebx
  373:	75 df                	jne    354 <PScheduler+0x64>
 			ret_pid = wait(&exit_status);
-			//printf("%d This is ret_pid:",ret_pid);	 
 			printf(1,"\n This is the parent: child with PID# %d has finished with status %d \n",ret_pid,exit_status);
 			}
                      printf(1,"\n if processes with highest priority finished first then its correct \n");

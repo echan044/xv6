@@ -134,7 +134,6 @@ int waitPid(void){
 	if(pid > 0) {
 		for (i = 0; i <  3; i++) {
 			ret_pid = wait(&exit_status);
-			//printf("%d This is ret_pid:",ret_pid);	 
 			printf(1,"\n This is the parent: child with PID# %d has finished with status %d \n",ret_pid,exit_status);
 			}
                      printf(1,"\n if processes with highest priority finished first then its correct \n");
