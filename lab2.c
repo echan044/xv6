@@ -7,7 +7,7 @@ int main(int argc, char *argv[])
 	int exitWait(void);
 	int waitPid(void);
 	int PScheduler(void);
-
+       int testaging(void);
   printf(1, "\n This program tests the correctness of your lab#1\n");
   
   if (atoi(argv[1]) == 1)
@@ -16,6 +16,8 @@ int main(int argc, char *argv[])
 	waitPid();
   else if (atoi(argv[1]) == 3)
 	PScheduler();
+ else if(atoi(argv[1]) == 4)
+	testaging();
   else 
    printf(1, "\ntype \"lab1 1\" to test exit and wait, \"lab1 2\" to test waitpid and \"lab1 3\" to test the priority scheduler \n");
   
@@ -134,6 +136,7 @@ int waitPid(void){
 	if(pid > 0) {
 		for (i = 0; i <  3; i++) {
 			ret_pid = wait(&exit_status);
+			//printf("%d This is ret_pid:",ret_pid);	 
 			printf(1,"\n This is the parent: child with PID# %d has finished with status %d \n",ret_pid,exit_status);
 			}
                      printf(1,"\n if processes with highest priority finished first then its correct \n");
@@ -141,3 +144,44 @@ int waitPid(void){
 			
 	return 0;}
 
+int testaging(void){
+   int i, j, k;
+   int pid, ret_pid, exit_status;
+    for(i = 0; i < 15; i++){
+    	pid = fork();
+	if(pid > 0)
+	   continue;
+
+        else if(pid == 0){
+	   if(i == 4)
+		setpriority(30);
+
+	   else 
+		setpriority(25);
+
+	   for (j=0;j<50000;j++) {
+                        for(k=0;k<10000;k++) {
+                                asm("nop"); }}
+	if(i == 4){
+
+	 printf(1, "\n child# %d with priority %d has finished! \n",getpid(),30);
+ 	exit(0);
+        }
+	else
+  	   printf(1, "\n child# %d with priority %d has finished! \n",getpid(),25);		
+		exit(0);
+         }
+        else {
+			printf(2," \n Error \n");
+			exit(-1);
+        }
+	}
+
+	if(pid > 0) {
+		for (i = 0; i <  15; i++) {
+			ret_pid = wait(&exit_status);
+		printf(1,"\n This is the parent: child with PID# %d has finished with status %d \n",ret_pid,exit_status);
+		}
+	}
+			
+	return 0;} 
