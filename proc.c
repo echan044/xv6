@@ -190,7 +190,7 @@ fork(void)
   }
 
   // Copy process state from proc.
-  if((np->pgdir = copyuvm(curproc->pgdir, curproc->sz)) == 0){
+  if((np->pgdir = copyuvm(curproc->pgdir, curproc->sz, curproc->numPages)) == 0){
     kfree(np->kstack);
     np->kstack = 0;
     np->state = UNUSED;
@@ -225,13 +225,11 @@ fork(void)
 // An exited process remains in the zombie state
 // until its parent calls wait() to find out it exited.
 void
-exit(int status)
+exit(void)
 {
   struct proc *curproc = myproc();
   struct proc *p;
   int fd;
-
-  curproc->procstatus = status;
 
   if(curproc == initproc)
     panic("init exiting");
@@ -272,12 +270,12 @@ exit(int status)
 // Wait for a child process to exit and return its pid.
 // Return -1 if this process has no children.
 int
-wait(int *status)
+wait(void)
 {
   struct proc *p;
   int havekids, pid;
   struct proc *curproc = myproc();
-
+  
   acquire(&ptable.lock);
   for(;;){
     // Scan through table looking for exited children.
@@ -288,8 +286,6 @@ wait(int *status)
       havekids = 1;
       if(p->state == ZOMBIE){
         // Found one.
-        if (status)
-          *status = p->procstatus;
         pid = p->pid;
         kfree(p->kstack);
         p->kstack = 0;
@@ -315,51 +311,6 @@ wait(int *status)
   }
 }
 
-int 
-waitpid(int pid, int *status, int options)
-{
-  struct proc *p;
-  int pidexists;
-  struct proc *curproc = myproc();	
-
-  acquire(&ptable.lock);
-  for(;;) {
-    //Scan through table looking for relevant pid
-    pidexists = 0;
-    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++) {
-      if(p->pid != pid)
-        continue;
-      pidexists = 1;
-      if(p->state == ZOMBIE) {
-        if (status)
-          *status = p->procstatus;
-        //Found relevant pid
-        pid = p->pid;
-        kfree(p->kstack);
-        p->kstack = 0;
-        freevm(p->pgdir);
-        p->pid = 0;
-        p->parent = 0;
-        p->name[0] = 0;
-        p->killed = 0;
-        p->state = UNUSED;
-        release(&ptable.lock);
-        return pid;
-      }
-    }
-
-    //No point waiting if pid does not exist in the table.
-    if(!pidexists || curproc->killed) {
-      release(&ptable.lock);
-      return -1;
-    }
-
-    //wait for relevant process to exit;
-    sleep(curproc, &ptable.lock);
-  }
-  
-}
-
 //PAGEBREAK: 42
 // Per-CPU process scheduler.
 // Each CPU calls scheduler() after setting itself up.
@@ -368,60 +319,41 @@ waitpid(int pid, int *status, int options)
 //  - swtch to start running that process
 //  - eventually that process transfers control
 //      via swtch back to the scheduler.
-
-
 void
 scheduler(void)
 {
   struct proc *p;
-  struct proc *highestPriority = myproc();
   struct cpu *c = mycpu();
-  struct proc *x;
   c->proc = 0;
-
+  
   for(;;){
     // Enable interrupts on this processor.
     sti();
 
     // Loop over process table looking for process to run.
-    
-
     acquire(&ptable.lock);
-
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
-	if(p->state != RUNNABLE)
-	 continue;
+      if(p->state != RUNNABLE)
+        continue;
 
-    highestPriority = p;
-    for(x = ptable.proc; x < &ptable.proc[NPROC]; x++){
-       x->priority = x->priority - 1;
-    if(x->state == RUNNABLE && x->priority < highestPriority->priority)
-        highestPriority = x;
-    
-    }
-  
-      p = highestPriority;
       // Switch to chosen process.  It is the process's job
       // to release ptable.lock and then reacquire it
       // before jumping back to us.
       c->proc = p;
       switchuvm(p);
       p->state = RUNNING;
-      
+
       swtch(&(c->scheduler), p->context);
       switchkvm();
-      p->priority = p->priority + 2;
-     
 
       // Process is done running for now.
       // It should have changed its p->state before coming back.
       c->proc = 0;
-   }  
+    }
     release(&ptable.lock);
- }
-  
-}
 
+  }
+}
 
 // Enter scheduler.  Must hold only ptable.lock
 // and have changed proc->state. Saves and restores
@@ -449,13 +381,6 @@ sched(void)
   mycpu()->intena = intena;
 }
 
-int setpriority(int priority){
-   acquire(&ptable.lock);
-   struct proc *p = myproc();
-   p->priority = priority;
-   release(&ptable.lock);
-   return 0;
-}
 // Give up the CPU for one scheduling round.
 void
 yield(void)
